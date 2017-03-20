@@ -9,7 +9,7 @@
 #include"assert.h"
   
 #define PORT 5000 
-#define BUF_SIZE 2000 
+#define BUF_SIZE 150 
 
 void removeSubstring(char *s,const char *toremove)
 {
@@ -22,7 +22,7 @@ int GetNumber2(const char *str) {
   while (*str) {
     int number;
     if (sscanf(str, "%d", &number) == 1) {
-      if(sw==2) return number;
+      if(sw==0) return number;
       sw++;
     }
     str++;
@@ -32,7 +32,7 @@ int GetNumber2(const char *str) {
 }
   
 void * receiveMessage(void * socket) {
- int sockfd, ret, x, num;
+ int sockfd, ret, x, num=0;
  char msg;
  char temp[10];
  char buffer[BUF_SIZE]; 
@@ -102,7 +102,12 @@ char newBuf[BUF_SIZE]="";
     strcat(newBuf, sizeBuf);
     strcat(newBuf, buffer);
     strcat(newBuf, "\0\r\n");
-  ret = sendto(sockfd, newBuf, BUF_SIZE, 0, (struct sockaddr *) &addr, sizeof(addr));  
+    if(strlen(buffer)>150)
+    {
+        printf("Error! Messege longer than 140 characters\n");
+    }
+    else
+        ret = sendto(sockfd, newBuf, BUF_SIZE, 0, (struct sockaddr *) &addr, sizeof(addr));  
 }
   if (ret < 0) {  
    printf("Error sending data!\n\t-%s", buffer);  

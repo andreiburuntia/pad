@@ -23,15 +23,19 @@
 static unsigned int cli_count = 0;
 static int uid = 10;
 
-char **usernames = {"paul","andrei","cipri","truta"};
-char **passwords = {"1","1","1","1"};
+char **usernames = {"paul","andr","cipr","trut"};
+char **passwords = {"1111","1111","1111","1111"};
+int used[4]={0,0,0,0};
 int userCount = 4;
 
 int checkLogin(char *username,char *password){
 	int i;
 	for(i=0;i<userCount;i++)
 		if(!strcmp(username,usernames[i])&&!strcmp(password,passwords[i]))
+		{
+			used[i]=1;
 			return 1;
+		}
 	return 0;
 }
 
@@ -59,10 +63,15 @@ void queue_add(client_t *cl){
 
 /* Delete client from queue */
 void queue_delete(int uid){
-	int i;
+	int i,j;
 	for(i=0;i<MAX_CLIENTS;i++){
 		if(clients[i]){
 			if(clients[i]->uid == uid){
+				//for(j=0;j<userCount;j++)
+				//{
+				//	if(strcmp(clients[i]->name,usernames[j])==0)
+				//		used[j]=0;
+				//}
 				clients[i] = NULL;
 				return;
 			}
@@ -169,7 +178,7 @@ void *handle_client(void *arg){
 	
 		/* Special options */
 		if(buff_in[0] == '\\'){
-			char *command, *param, *username, *password;
+			char *command, *param, username[4], password[4];
 			command = strtok(buff_in," ");
 			if(!strcmp(command, "\\QUIT")){
 				break;
@@ -177,25 +186,24 @@ void *handle_client(void *arg){
 				param = strtok(NULL, " ");
 				if(param){
 					char *old_name = strdup(cli->name);
-					strcpy(cli->name, param);
-					sprintf(buff_out, "<<RENAME, %s TO %s\r\n", old_name, cli->name);
+					memcpy(username, param, 4);
+					memcpy(password, param+5, 4);
+					if(1)
+					{
+						cli->login=1;
+						sprintf(buff_out, "<<RENAME, %s TO %s\r\n", old_name, username);
+						send_message_all(buff_out);
+						strcpy(cli->name, username);
+					}
+					else{
+						sprintf(buff_out,"<<BAD LOGIN");
+						send_message_self(buff_out, cli->connfd);
+					}
 					free(old_name);
-					send_message_all(buff_out);
 				}else{
 					send_message_self("<<NAME CANNOT BE NULL\r\n", cli->connfd);
 				}
-			}else if(!strcmp(command, "\\LOGIN")){
-                username = strtok(NULL, " ");
-                password = strtok(NULL, "\0");
-                if(checkLogin(username,password)){
-                    cli->login=1;
-                    strcpy(cli->name,username);
-                    sprintf(buff_out, "<<%s loged in \r\n", cli->name);
-                    send_message_all(buff_out);
-                }else{
-                        send_message_self("<<WRONG USERNAME/PASSWORD\r\n", cli->connfd);
-                }
-            }else if(!strcmp(command, "\\PING")){
+			}else if(!strcmp(command, "\\PING")){
 				send_message_self("<<PONG\r\n", cli->connfd);
 			}else if(!strcmp(command, "\\ACTIVE")){
 				sprintf(buff_out, "<<CLIENTS %d\r\n", cli_count);
@@ -213,7 +221,7 @@ void *handle_client(void *arg){
 				send_message_self("<<UNKOWN COMMAND\r\n", cli->connfd);
 			}
 		}else{
-			if(!cli->login) //change this1!!!!!!!!!!!!!!!!!!!!!!!<<<<<<<<<-------------------
+			if(cli->login) //change this1!!!!!!!!!!!!!!!!!!!!!!!<<<<<<<<<-------------------
 			{
 				/* Send message */
 				sprintf(buff_out, "[%s] %s\r\n", cli->name, buff_in);
