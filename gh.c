@@ -145,7 +145,6 @@ void *handle_client(void *arg){
 	char buff_out[1024];
 	char buff_in[1024];
 	int rlen;
-	char usernamex[20], passwordx[20];
 
 	cli_count++;
 	client_t *cli = (client_t *)arg;
@@ -171,12 +170,15 @@ void *handle_client(void *arg){
 		/* Special options */
 		if(buff_in[0] == '\\'){
 			char *command, *param, *username, *password;
+			command = strtok(buff_in," ");
+			printf("%s",command);
 			if(!strcmp(command, "\\QUIT")){
 				break;
 			}else if(!strcmp(command, "\\LOGIN")){
-				sscanf(command, "\\LOGIN %s %s", usernamex, passwordx);
+				/*username = strtok(NULL, " ");
+				password = strtok(NULL, " ");
 				if(username&&password){
-					if(1){
+					if(checkLogin(username,password)){
 						cli->login=1;
 						strcpy(cli->name,username);
 						sprintf(buff_out, "<<%s loged in \r\n", cli->name);
@@ -187,6 +189,7 @@ void *handle_client(void *arg){
 				}else{
 					send_message_self("<<WRONG USERNAME/PASSWORD\r\n", cli->connfd);
 				}
+				*/
 			}else if(!strcmp(command, "\\PING")){
 				send_message_self("<<PONG\r\n", cli->connfd);
 			}else if(!strcmp(command, "\\ACTIVE")){
@@ -205,7 +208,7 @@ void *handle_client(void *arg){
 				send_message_self("<<UNKOWN COMMAND\r\n", cli->connfd);
 			}
 		}else{
-			if(cli->login)
+			if(!cli->login) //change this1!!!!!!!!!!!!!!!!!!!!!!!<<<<<<<<<-------------------
 			{
 				/* Send message */
 				sprintf(buff_out, "[%s] %s\r\n", cli->name, buff_in);

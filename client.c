@@ -11,19 +11,22 @@
 #define BUF_SIZE 2000 
   
 void * receiveMessage(void * socket) {
- int sockfd, ret;
+ int sockfd, ret, x;
+ char msg[100];
  char buffer[BUF_SIZE]; 
  sockfd = (int) socket;
  memset(buffer, 0, BUF_SIZE);  
  for (;;) {
-    strcpy(buffer,"");
+    memset(buffer,0,strlen(buffer));
   ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);  
   if (ret < 0) {  
    printf("Error receiving data!\n");    
   } else {
-    //sscanf(buffer,"%s\n",buffer);
-   //fputs(buffer, stdout);
-    printf("%s\n", buffer);
+    //sscanf(buffer,"/SEND %d %s",&x, msg);
+    //printf("%d", x);
+   fputs(buffer, stdout);
+    //x=5;
+    //printf("%.*s", x, buffer);
    //printf("\n");
   }  
  }
@@ -71,6 +74,7 @@ char newBuf[BUF_SIZE]="";
     sprintf(sizeBuf, "%d ", strlen(buffer));
     strcat(newBuf, sizeBuf);
     strcat(newBuf, buffer);
+    strcat(newBuf, "\r\n");
   ret = sendto(sockfd, newBuf, BUF_SIZE, 0, (struct sockaddr *) &addr, sizeof(addr));  
   if (ret < 0) {  
    printf("Error sending data!\n\t-%s", buffer);  
