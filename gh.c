@@ -171,26 +171,31 @@ void *handle_client(void *arg){
 		if(buff_in[0] == '\\'){
 			char *command, *param, *username, *password;
 			command = strtok(buff_in," ");
-			printf("%s",command);
 			if(!strcmp(command, "\\QUIT")){
 				break;
-			}else if(!strcmp(command, "\\LOGIN")){
-				/*username = strtok(NULL, " ");
-				password = strtok(NULL, " ");
-				if(username&&password){
-					if(checkLogin(username,password)){
-						cli->login=1;
-						strcpy(cli->name,username);
-						sprintf(buff_out, "<<%s loged in \r\n", cli->name);
-						send_message_all(buff_out);
-					}else{
-						send_message_self("<<WRONG USERNAME/PASSWORD\r\n", cli->connfd);
-					}
+			}else if(!strcmp(command, "\\NAME")){
+				param = strtok(NULL, " ");
+				if(param){
+					char *old_name = strdup(cli->name);
+					strcpy(cli->name, param);
+					sprintf(buff_out, "<<RENAME, %s TO %s\r\n", old_name, cli->name);
+					free(old_name);
+					send_message_all(buff_out);
 				}else{
-					send_message_self("<<WRONG USERNAME/PASSWORD\r\n", cli->connfd);
+					send_message_self("<<NAME CANNOT BE NULL\r\n", cli->connfd);
 				}
-				*/
-			}else if(!strcmp(command, "\\PING")){
+			}else if(!strcmp(command, "\\LOGIN")){
+                username = strtok(NULL, " ");
+                password = strtok(NULL, "\0");
+                if(checkLogin(username,password)){
+                    cli->login=1;
+                    strcpy(cli->name,username);
+                    sprintf(buff_out, "<<%s loged in \r\n", cli->name);
+                    send_message_all(buff_out);
+                }else{
+                        send_message_self("<<WRONG USERNAME/PASSWORD\r\n", cli->connfd);
+                }
+            }else if(!strcmp(command, "\\PING")){
 				send_message_self("<<PONG\r\n", cli->connfd);
 			}else if(!strcmp(command, "\\ACTIVE")){
 				sprintf(buff_out, "<<CLIENTS %d\r\n", cli_count);

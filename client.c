@@ -6,13 +6,35 @@
 #include"netinet/in.h"  
 #include"netdb.h"
 #include"pthread.h"
+#include"assert.h"
   
 #define PORT 5000 
 #define BUF_SIZE 2000 
+
+void removeSubstring(char *s,const char *toremove)
+{
+  while( s=strstr(s,toremove) )
+    memmove(s,s+strlen(toremove),1+strlen(s+strlen(toremove)));
+}
+
+int GetNumber2(const char *str) {
+  int sw=0;
+  while (*str) {
+    int number;
+    if (sscanf(str, "%d", &number) == 1) {
+      if(sw==2) return number;
+      sw++;
+    }
+    str++;
+  } 
+  // No int found
+  return -1; 
+}
   
 void * receiveMessage(void * socket) {
- int sockfd, ret, x;
- char msg[100];
+ int sockfd, ret, x, num;
+ char msg;
+ char temp[10];
  char buffer[BUF_SIZE]; 
  sockfd = (int) socket;
  memset(buffer, 0, BUF_SIZE);  
@@ -22,12 +44,12 @@ void * receiveMessage(void * socket) {
   if (ret < 0) {  
    printf("Error receiving data!\n");    
   } else {
-    //sscanf(buffer,"/SEND %d %s",&x, msg);
-    //printf("%d", x);
+    x=GetNumber2(buffer);
+    //printf("%d\n",x);
+    snprintf(temp,10," /SEND %d ", x);
+    removeSubstring(buffer, temp);
+    num=strlen(buffer);
    fputs(buffer, stdout);
-    //x=5;
-    //printf("%.*s", x, buffer);
-   //printf("\n");
   }  
  }
 }
@@ -70,12 +92,18 @@ int main(int argc, char**argv) {
 char sizeBuf[5];
 char newBuf[BUF_SIZE]="";
  while (fgets(buffer, BUF_SIZE, stdin) != NULL) {
+    if(buffer[0]=='\\')
+    {
+        ret = sendto(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &addr, sizeof(addr));  
+    }
+    else{
     strcpy(newBuf,"/SEND ");
     sprintf(sizeBuf, "%d ", strlen(buffer));
     strcat(newBuf, sizeBuf);
     strcat(newBuf, buffer);
-    strcat(newBuf, "\r\n");
+    strcat(newBuf, "\0\r\n");
   ret = sendto(sockfd, newBuf, BUF_SIZE, 0, (struct sockaddr *) &addr, sizeof(addr));  
+}
   if (ret < 0) {  
    printf("Error sending data!\n\t-%s", buffer);  
   }
